@@ -12,7 +12,8 @@ void main() {
       ChangeNotifierProvider(
         create: (context) => AuthRepository.instance(),
         child: App(),
-  ));
+  )
+  );
 }
 class App extends StatelessWidget {
   final Future<FirebaseApp> _initialization = Firebase.initializeApp();
@@ -55,7 +56,7 @@ class RandomWords extends StatefulWidget {
 }
 
 class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = generateWordPairs().take(10).toList();
+  final _suggestions = <WordPair>[];
   final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
 
@@ -100,7 +101,6 @@ class _RandomWordsState extends State<RandomWords> {
 
   @override
   Widget build(BuildContext context) {
-    AuthRepository rep = AuthRepository.instance();
     return Scaffold (
       appBar: AppBar(
         title: Text('Startup Name Generator', style: TextStyle( fontSize: 17 ),),
@@ -129,26 +129,26 @@ class _RandomWordsState extends State<RandomWords> {
                   style: _biggerFont,
                 ),
                 trailing:
-                Icon(
-                    Icons.delete_outline
+                IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: (){
+                      setState(() {
+                        _saved.remove(pair);
+                      });
+                    } ,
                 ),
-                onTap: (){
-                  final snackBar = SnackBar(
-                    content: Text('Deletion is not implemented yet'),
-                  );
-
-                  // Find the ScaffoldMessenger in the widget tree
-                  // and use it to show a SnackBar.
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                },
               );
             },
           );
-          final divided = ListTile.divideTiles(
+          var divided;
+          if(tiles.isEmpty){
+            divided = tiles.toList();
+          }else{
+            divided = ListTile.divideTiles(
             context: context,
             tiles: tiles,
-          ).toList();
-
+            ).toList();
+          }
           return Scaffold(
             appBar: AppBar(
               title: Text('Saved Suggestions'),
@@ -206,9 +206,9 @@ class _RandomWordsState extends State<RandomWords> {
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
                               ),
                               padding: const EdgeInsets.fromLTRB(
-                                  135.0,
+                                  137.0,
                                   0.0,
-                                  135.0,
+                                  137.0,
                                   0.0
                               ),
                             );
@@ -252,52 +252,4 @@ class _RandomWordsState extends State<RandomWords> {
   }
 }
 
-
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
-
-  @override
-  _MyStatefulWidgetState createState() => _MyStatefulWidgetState();
-}
-
-class _MyStatefulWidgetState extends State<MyStatefulWidget>
-    with TickerProviderStateMixin {
-  late AnimationController controller;
-
-  @override
-  void initState() {
-    controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..addListener(() {
-      setState(() {});
-    });
-    controller.repeat(reverse: true);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            CircularProgressIndicator(
-              value: controller.value,
-              semanticsLabel: 'Linear progress indicator',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
