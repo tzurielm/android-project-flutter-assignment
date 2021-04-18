@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'FirebaseHelper.dart';
+import '../Firebase/FirebaseHelper.dart';
+import '../Firebase/auth_repository.dart';
 import 'LoginPage.dart';
-import 'auth_repository.dart';
 
 class RandomWords extends StatefulWidget {
   @override
