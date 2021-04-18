@@ -1,9 +1,10 @@
-
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
+import 'package:hello_me/FirebaseHelper.dart';
 import 'package:provider/provider.dart';
-
 import 'auth_repository.dart';
 
 void main() {
@@ -11,7 +12,9 @@ void main() {
   runApp(
       ChangeNotifierProvider(
         create: (context) => AuthRepository.instance(),
-        child: App(),
+        builder: (context, snapshot) {
+          return App();
+        }
   )
   );
 }
@@ -59,8 +62,33 @@ class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
   final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
+  //final docID = "tNPOoiMNFCne6eOvVqht";
+  StreamController<WordPair> _controller = new StreamController<WordPair>.broadcast();
+  //final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Widget _buildSuggestions() {
+  Widget getSavedStream(bool isSavedList){
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseHelper().getSavedList(),
+      builder: (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+        if(snapshot.hasData){
+          Map<String, dynamic> data = snapshot.data?.data() ?? {};
+          _saved.clear();
+          for( var word in data.values) {
+              word = word.toList();
+              var pair = new WordPair(word[0],word[1]);
+              _saved.add(pair);
+          }
+        }
+        if(isSavedList){
+          return ListView(children: getDivided());
+        }else {
+          return WordsListBuilder();
+        }
+      }
+    );
+  }
+
+  Widget WordsListBuilder(){
     return ListView.builder(
         padding: const EdgeInsets.all(16),
         itemBuilder: (BuildContext _context, int i) {
@@ -73,6 +101,18 @@ class _RandomWordsState extends State<RandomWords> {
           }
           return _buildRow(_suggestions[index]);
         }
+    );
+  }
+  
+  Widget _buildSuggestions() {
+    return Consumer<AuthRepository>(
+        builder: (context, rep, _) {
+          if (AuthRepository.instance().isAuthenticated) {
+            return getSavedStream(false);
+          } else {
+            return WordsListBuilder();
+          }
+      }
     );
   }
 
@@ -89,9 +129,16 @@ class _RandomWordsState extends State<RandomWords> {
       ),
       onTap: (){
         setState(() {
+          Status status = AuthRepository.instance().status;
           if(alreadySaved){
+            if(status == Status.Authenticated){
+              FirebaseHelper().removeWord(pair);
+            }
             _saved.remove(pair);
           }else {
+            if(status == Status.Authenticated){
+              FirebaseHelper().addWord(pair);
+            }
             _saved.add(pair);
           }
         });
@@ -117,43 +164,60 @@ class _RandomWordsState extends State<RandomWords> {
     );
   }
 
+  List<Widget> getDivided(){
+    final tiles = _saved.map(
+          (WordPair pair) {
+        return ListTile(
+          title: Text(
+            pair.asPascalCase,
+            style: _biggerFont,
+          ),
+          trailing:
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: (){
+              setState(() {
+                if(AuthRepository.instance().status == Status.Authenticated){
+                  FirebaseHelper().removeWord(pair);
+                }else {
+                  _controller.sink.add(pair);
+                }
+                _saved.remove(pair);
+              });
+            } ,
+          ),
+        );
+      },
+    );
+    var divided;
+    if(tiles.isEmpty){
+      divided = tiles.toList();
+    }else{
+      divided = ListTile.divideTiles(
+        context: context,
+        tiles: tiles,
+      ).toList();
+    }
+    return divided;
+  }
+
   void _pushSaved() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
-          final tiles = _saved.map(
-                (WordPair pair) {
-              return ListTile(
-                title: Text(
-                  pair.asPascalCase,
-                  style: _biggerFont,
-                ),
-                trailing:
-                IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: (){
-                      setState(() {
-                        _saved.remove(pair);
-                      });
-                    } ,
-                ),
-              );
-            },
-          );
-          var divided;
-          if(tiles.isEmpty){
-            divided = tiles.toList();
-          }else{
-            divided = ListTile.divideTiles(
-            context: context,
-            tiles: tiles,
-            ).toList();
-          }
           return Scaffold(
             appBar: AppBar(
               title: Text('Saved Suggestions'),
             ),
-            body: ListView(children: divided),
+            body: AuthRepository.instance().status == Status.Authenticated ? getSavedStream(true) :
+            StreamBuilder<WordPair>(
+              stream: _controller.stream,
+              builder: (BuildContext context, AsyncSnapshot<WordPair> snapshot) {
+                return ListView(children: getDivided());
+              }
+            )
+
+
           );
         }, // ...to here.
       ),
@@ -234,7 +298,8 @@ class _RandomWordsState extends State<RandomWords> {
                                       );
                                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                                     }else{
-                                      Navigator.pop(context);
+                                      FirebaseHelper().backupSaved(_saved);
+                                        Navigator.pop(context);
                                     }
                                   }
                                   );
