@@ -3,17 +3,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:snapping_sheet/snapping_sheet.dart';
 import '../Firebase/FirebaseHelper.dart';
 import '../Firebase/auth_repository.dart';
 import 'LoginPage.dart';
 
 class RandomWords extends StatefulWidget {
+  SnappingSheetController sheetController;
+  var _suggestions = <WordPair>[];
   @override
   _RandomWordsState createState() => _RandomWordsState();
+
+  RandomWords(this.sheetController, this._suggestions);
 }
 
 class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = <WordPair>[];
   final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
   StreamController<WordPair> _controller = new StreamController<WordPair>.broadcast();
@@ -26,6 +30,9 @@ class _RandomWordsState extends State<RandomWords> {
             Map<String, dynamic> data = snapshot.data?.data() ?? {};
             _saved.clear();
             for( var word in data.values) {
+              if (word is String){
+                continue;
+              }
               word = word.toList();
               var pair = new WordPair(word[0],word[1]);
               _saved.add(pair);
@@ -48,10 +55,10 @@ class _RandomWordsState extends State<RandomWords> {
             return Divider();
           }
           final int index = i ~/ 2;
-          if (index >= _suggestions.length) {
-            _suggestions.addAll(generateWordPairs().take(10));
+          if (index >= widget._suggestions.length) {
+            widget._suggestions.addAll(generateWordPairs().take(10));
           }
-          return _buildRow(_suggestions[index]);
+          return _buildRow(widget._suggestions[index]);
         }
     );
   }
@@ -81,6 +88,10 @@ class _RandomWordsState extends State<RandomWords> {
       ),
       onTap: (){
         setState(() {
+          if( widget.sheetController.isAttached && widget.sheetController.currentPosition == 190.0){
+            widget.sheetController.snapToPosition(SnappingPosition.pixels(positionPixels: 30.0));
+            return;
+          }
           Status status = AuthRepository.instance().status;
           if(alreadySaved){
             if(status == Status.Authenticated){
@@ -126,7 +137,7 @@ class _RandomWordsState extends State<RandomWords> {
           ),
           trailing:
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline, color: Colors.red),
             onPressed: (){
               setState(() {
                 if(AuthRepository.instance().status == Status.Authenticated){

@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'package:english_words/english_words.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:hello_me/Pages/RandomWords.dart';
 import 'package:provider/provider.dart';
+import 'package:snapping_sheet/snapping_sheet.dart';
 import 'Firebase/auth_repository.dart';
-import 'Pages/RandomWords.dart';
+
+import 'Pages/SnappingSheet.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,14 +43,19 @@ class App extends StatelessWidget {
 }
 
 class MyApp extends StatelessWidget {
+  final _suggestions = <WordPair>[];
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Startup Name Generator',
-      theme: ThemeData(
-        primaryColor: Colors.red,
-      ),
-      home: RandomWords(),
+    return Consumer<AuthRepository>(
+        builder: (context, authRep, snapshot) {
+          return MaterialApp(
+            title: 'Startup Name Generator',
+            theme: ThemeData(
+              primaryColor: Colors.red.shade800,
+            ),
+            home: AuthRepository.instance().isAuthenticated ? MySnappingSheet(_suggestions) : RandomWords(SnappingSheetController(),_suggestions),
+          );
+        }
     );
   }
 }

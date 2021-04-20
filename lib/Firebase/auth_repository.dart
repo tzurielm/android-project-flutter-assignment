@@ -21,7 +21,19 @@ class AuthRepository with ChangeNotifier {
 
   bool get isAuthenticated => status == Status.Authenticated;
 
-
+  Future<UserCredential?> signUp(String email, String password) async {
+    try {
+      _status = Status.Authenticating;
+      notifyListeners();
+      return await _auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+    } catch (e) {
+      print(e);
+      _status = Status.Unauthenticated;
+      notifyListeners();
+      return null;
+    }
+  }
 
   Future<bool> signIn(String email, String password) async {
     try {
