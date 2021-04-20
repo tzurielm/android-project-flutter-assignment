@@ -123,6 +123,7 @@ class _LoginPageState extends State<LoginPage> {
     TextEditingController newPassword = TextEditingController();
     showModalBottomSheet(
         context: context,
+        isScrollControlled: true,
         builder: (context) {
           return SizedBox(
             height: 200,
