@@ -1,16 +1,11 @@
-# hello_me
-
-A new Flutter application.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Dry questions:
+1. The class of the controller is SnappingSheetController, it allows the developer to control the features:
+  * Adjusting the position of the sheet with snapToPosition and change the SnappingSheet state.
+  * Get information about the sheet location (which helped me implement the blur effect) with currentPosition.
+  * define actions with state changing (like onSheetMoved)
+2. The paramter that controls the snapping animation is "snappingPositions" which takes a list of objects called SnappingPosition.
+   The SnappingPosition object has paramaters such as "snappingCurve" and "snappingDuration" which control the animation of the snapping sheet.
+3. One advantage of InkWell:
+   Inkwell allows the usage of ripple effects upon tap, indicating the user that the tap has been registered.
+   Advantage of GestureDetector:
+   GestureDetector provides a much broader variety of Gestures than InkWell such as "onDoubleTap" and "onLongPress" which allows better control on our app.
