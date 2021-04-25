@@ -3,7 +3,7 @@ import 'package:english_words/english_words.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:hello_me/Firebase/auth_repository.dart';
-import 'package:hello_me/SheetContent.dart';
+import 'file:///C:/Users/Public/hello_me/lib/Pages/SheetContent.dart';
 import 'package:snapping_sheet/snapping_sheet.dart';
 import 'RandomWords.dart';
 
